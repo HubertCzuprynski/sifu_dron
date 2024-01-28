@@ -36,7 +36,7 @@ class DroneController(Node):
             y = self.gt_pose.position.y
         dx = abs(x*2 - self.goals[self.next_goal][0])
         dy = abs(y*2 - self.goals[self.next_goal][1])
-         if dx < .5 and dy < .5:
+        if dx < .5 and dy < .5:
             print("Osiągnąłeś cel, lecimy dalej")
             self.next_goal += 1
             if self.next_goal > len(self.goals) -1:
