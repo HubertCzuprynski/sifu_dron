@@ -8,24 +8,19 @@ class DroneController(Node):
     def __init__(self):
         super().__init__('drone_controller')
         
-        # Current pose subscriber
-        self.gt_pose_sub = self.create_subscription(
-            Pose,
-            '/drone/gt_pose',
-            self.pose_callback,
-            1)
-
+        #subskrybent
+        self.gt_pose_sub = self.create_subscription( Pose, '/drone/gt_pose',
+            self.pose_callback, 1)
         self.gt_pose = None
 
-        # Control command publisher
+        #jak ma lecieć
         self.command_pub = self.create_publisher(Twist, '/drone/cmd_vel', 10)
-        
-        # Callback for executing a control commands
-        timer_period = 0.1  # seconds
+        #czas callbacku
+        timer_period = 1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-
-        # Feel fre to fill with your code! Add some objects to represent a goal points to achieve
-
+        #pozycje gdzie ma lecieć (cel)
+        self.goals = [[15.0, -15.0],[15.0, 15.0], [-15.0, 15.0], [-15.0, -15.0]]
+        self.next_goal = 0
     
     def pose_callback(self, data):
         self.gt_pose = data
@@ -33,13 +28,26 @@ class DroneController(Node):
 
     
     def timer_callback(self):
-        # HINT: Check a current pose. Use it to check if a drone achieved a desired pose.
-        print(f"Current pose: {self.gt_pose}")
-        
-        # HINT: Use a self.command_pub to publish a command
-        # Fill with your code!
-        print("Published!")
-
+        #pozycje i lot do celu
+        x = 0
+        y = 0
+        if self.gt_pose is not None:
+            x = self.gt_pose.position.x
+            y = self.gt_pose.position.y
+        dx = abs(x*2 - self.goals[self.next_goal][0])
+        dy = abs(y*2 - self.goals[self.next_goal][1])
+         if dx < .5 and dy < .5:
+            print("Osiągnąłeś cel, lecimy dalej")
+            self.next_goal += 1
+            if self.next_goal > len(self.goals) -1:
+                self.next_goal = 0
+        #wiadomosc jako Twist i publikacja
+        msg = Twist()
+        msg.linear.z = 10
+        msg.linear.x = self.goals[self.next_goal][0]
+        msg.linear.y = self.goals[self.next_goal][1]
+        #selfpub
+        self.command_pub.publish(msg)
 
 
 def main(args=None):
